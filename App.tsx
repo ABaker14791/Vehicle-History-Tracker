@@ -1,11 +1,19 @@
 import "react-native-url-polyfill/auto";
 import { useState, useEffect } from "react";
-import { supabase } from "./lib/supabase";
+// Components
 import Auth from "./components/Auth";
 import Account from "./components/Account";
-import { View } from "react-native";
+import MyVehicle from "./components/MyVehicle";
+// Supabase
+import { supabase } from "./lib/supabase";
 import { Session } from "@supabase/supabase-js";
-import Navbar from "./components/Navbar";
+// Navigation
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+// Icons
+import { AntDesign } from "@expo/vector-icons";
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
 	const [session, setSession] = useState<Session | null>(null);
@@ -21,15 +29,36 @@ export default function App() {
 	}, []);
 
 	return (
-		<View>
+		<NavigationContainer>
 			{session && session.user ? (
-				<>
-					<Account key={session.user.id} session={session} />
-					<Navbar />
-				</>
+				<Tab.Navigator
+					screenOptions={({ route }) => ({
+						tabBarIcon: () => {
+							let iconName: any;
+
+							if (route.name === "Account") {
+								iconName = "user";
+							} else if (route.name === "MyVehicle") {
+								iconName = "car";
+							}
+							return <AntDesign name={iconName} size={24} color="black" />;
+						},
+						tabBarActiveTintColor: "tomato",
+						tabBarInactiveTintColor: "gray",
+					})}
+				>
+					<Tab.Screen name="MyVehicle" component={MyVehicle} />
+					<Tab.Screen name="Account">
+						{(props) => (
+							<Account {...props} key={session.user.id} session={session} />
+						)}
+					</Tab.Screen>
+				</Tab.Navigator>
 			) : (
-				<Auth />
+				<Tab.Navigator>
+					<Tab.Screen name="Auth" component={Auth} />
+				</Tab.Navigator>
 			)}
-		</View>
+		</NavigationContainer>
 	);
 }
